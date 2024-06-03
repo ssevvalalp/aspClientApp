@@ -1,31 +1,30 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using aspClientApp.Models;
+using System.Text.Json;
 
 namespace aspClientApp.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    
 
-    public HomeController(ILogger<HomeController> logger)
+    public async Task <IActionResult> Index()
     {
-        _logger = logger;
+        var products = new List<ProductDTO>(); //gelecek olan datalar ProductDTO listesine doldurulur
+
+        using(var httpClient = new HttpClient())
+        {
+          using (var response = await httpClient.GetAsync("http://localhost:5265/api/products"))
+            {
+                //servisten gelen datalar string olarak okunur
+                string apiResponse = await response.Content.ReadAsStringAsync();
+                //Deserialize
+                products = JsonSerializer.Deserialize<List<ProductDTO>>(apiResponse); //göderilecek olan string değer apiResponse
+            }
+        }
+        return View(products);
     }
 
-    public IActionResult Index()
-    {
-        return View();
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
+    
 }
